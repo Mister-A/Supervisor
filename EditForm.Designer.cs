@@ -1,4 +1,4 @@
-﻿namespace SupervisorEdit
+﻿namespace Supervisor
 {
     partial class EditForm
     {

@@ -1,26 +1,88 @@
-﻿using System;
+﻿using Supervisor.Properties;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
+using System.Windows.Forms;
 
 namespace Supervisor
 {
     public class Program
     {
+        [STAThread]
         private static void Main(string[] args)
         {
-            MonitorSettings settings = new MonitorSettings();
-            var threads = new List<MonitorThread>(settings.monitorGroup.Monitors.Count);
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new SupervisorSysTray());
+        }
+    }
 
-            foreach (MonitorGroup.ApplicationElement appMonitor in settings.monitorGroup.Monitors)
+    public class SupervisorSysTray : ApplicationContext
+    {
+        private NotifyIcon trayIcon;
+        private MonitorSettings settings = new MonitorSettings();
+        private List<MonitorThread> threads;
+
+        public SupervisorSysTray()
+        {
+            threads = new List<MonitorThread>(settings.MonitorGroup.Monitors.Count);
+
+            // Initialize Tray Icon
+            trayIcon = new NotifyIcon()
+            {
+                Icon = Resources.Icon,
+                ContextMenu = new ContextMenu(new MenuItem[] {
+                new MenuItem("Settings...", OpenSettings),
+                new MenuItem("Exit", Exit)
+            }),
+                Visible = true
+            };
+
+            //Do our job
+            Start();
+        }
+
+        //Tray icon menu item
+        private void Exit(object sender, EventArgs e)
+        {
+            // Hide tray icon, otherwise it will remain shown until user mouses over it
+            trayIcon.Visible = false;
+
+            //Close anything we're responsible for starting
+            Stop();
+
+            Application.Exit();
+        }
+
+        //Tray icon menu item
+        private void OpenSettings(object sender, EventArgs e)
+        {
+            Form settingsForm = new EditForm();
+            if (settingsForm.ShowDialog() == DialogResult.OK)
+            {
+                Stop();
+                Thread.Sleep(1000);
+                Start();
+            }
+        }
+
+        //Start all defined monitors
+        private void Start()
+        {
+            foreach (MonitorGroup.ApplicationElement appMonitor in settings.MonitorGroup.Monitors)
             {
                 var t = new MonitorThread(appMonitor);
                 threads.Add(t);
             }
-            Thread.Sleep(5000);
+        }
+
+        //Signal monitors to stop and block until they've closed
+        private void Stop()
+        {
             for (int i = 0; i < threads.Count; i++)
             {
-                threads[i].IsCancelled = true;
+                threads[i].Stop();
             }
             for (int i = 0; i < threads.Count; i++)
             {

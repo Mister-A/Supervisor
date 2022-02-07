@@ -7,8 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Supervisor", "Supervisor.cs
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Supervisor.Tests", "Tests\Supervisor.Tests\Supervisor.Tests.csproj", "{918BFE74-5BBD-416F-820C-E906FC4CD915}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SupervisorEdit", "Edit\SupervisorEdit\SupervisorEdit.csproj", "{CC2BFC4F-ACAA-4A80-82AF-F8DCD85203B0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,10 +21,6 @@ Global
 		{918BFE74-5BBD-416F-820C-E906FC4CD915}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{918BFE74-5BBD-416F-820C-E906FC4CD915}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{918BFE74-5BBD-416F-820C-E906FC4CD915}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CC2BFC4F-ACAA-4A80-82AF-F8DCD85203B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CC2BFC4F-ACAA-4A80-82AF-F8DCD85203B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CC2BFC4F-ACAA-4A80-82AF-F8DCD85203B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CC2BFC4F-ACAA-4A80-82AF-F8DCD85203B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

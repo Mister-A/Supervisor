@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using Supervisor;
 
-namespace SupervisorEdit
+namespace Supervisor
 {
     /// <summary>
     /// View, edit and add application monitors and set general preferences
@@ -15,6 +15,7 @@ namespace SupervisorEdit
         private DialogResult result;
         private int editIndex = new int();
         private string originalName = "";
+        private bool changed = false;
 
         public EditForm()
         {
@@ -250,6 +251,7 @@ namespace SupervisorEdit
                 Edit(false);
                 editIndex = default(int);
                 originalName = "";
+                changed = true;
             }
             else
             {
@@ -293,6 +295,7 @@ namespace SupervisorEdit
                 Edit(false);
                 editIndex = default(int);
                 originalName = "";
+                changed = true;
             }
         }
 
@@ -304,76 +307,48 @@ namespace SupervisorEdit
         /// <param name="e"></param>
         private void BtnClose_Click(object sender, EventArgs e)
         {
-            string message = "Do you want to restart Supervisor Service to apply changes?";
-            string caption = "Restart service?";
+            CheckReload();
+        }
 
-            using (new CenterWinDialog(this))
+        //Intercept form close to trigger optional reload
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+
+            //Close if we've already asked, not needed or is shutting down
+            if (e.CloseReason == CloseReason.WindowsShutDown || DialogResult == DialogResult.OK || DialogResult == DialogResult.No) return;
+
+            //Check and ask if settings have changed
+            CheckReload();
+        }
+
+        //Ask to reload if settings edited
+        private void CheckReload()
+        {
+            if (changed)
             {
-                result = MessageBox.Show(message, caption,
-                             MessageBoxButtons.YesNo,
-                             MessageBoxIcon.Question);
+                string message = "You have changed the monitor settings, do you want to stop and restart the monitor for changes to take effect?";
+                string caption = "Restart Monitor?";
+
+                using (new CenterWinDialog(this))
+                {
+                    result = MessageBox.Show(message, caption,
+                                 MessageBoxButtons.YesNo,
+                                 MessageBoxIcon.Question);
+                }
+
+                if (result == DialogResult.Yes)
+                {
+                    this.DialogResult = DialogResult.OK;
+                }
+                else
+                {
+                    this.DialogResult = DialogResult.No;
+                }
             }
-
-            if (result == DialogResult.Yes)
+            else
             {
-                bool failed = false;
-                string serviceName = "SupervisorService";
-                ServiceController serviceController = new ServiceController(serviceName);
-                int tickCount1 = Environment.TickCount;
-                int tickCount2 = Environment.TickCount;
-                TimeSpan timeout = TimeSpan.FromMilliseconds(10000);
-                try
-                {
-                    serviceController.Stop();
-                    serviceController.WaitForStatus(ServiceControllerStatus.Stopped, timeout);
-                }
-                catch (InvalidOperationException ex)
-                {
-                    message = "The Supervisor Service does not seem to be installed on your computer, please check. " + ex.Message;
-                    caption = "Service not found";
-
-                    using (new CenterWinDialog(this))
-                    {
-                        result = MessageBox.Show(message, caption,
-                                     MessageBoxButtons.OK,
-                                     MessageBoxIcon.Exclamation);
-                    }
-                    failed = true;
-                }
-                catch (Exception ex)
-                {
-                    message = "The Supervisor Service did not stop in time, please check it is installed and restart manually" + ex.Message;
-                    caption = "Failed to stop";
-
-                    using (new CenterWinDialog(this))
-                    {
-                        result = MessageBox.Show(message, caption,
-                                     MessageBoxButtons.OK,
-                                     MessageBoxIcon.Exclamation);
-                    }
-                    failed = true;
-                }
-                if (!failed)
-                {
-                    timeout = TimeSpan.FromMilliseconds(10000 - (tickCount1 - tickCount2));
-                    serviceController.Start();
-                    try
-                    {
-                        serviceController.WaitForStatus(ServiceControllerStatus.Running, timeout);
-                    }
-                    catch (Exception ex)
-                    {
-                        message = "The Supervisor Service did not start in time, please check and manually start as needed. " + ex.Message;
-                        caption = "Failed to start";
-
-                        using (new CenterWinDialog(this))
-                        {
-                            result = MessageBox.Show(message, caption,
-                                         MessageBoxButtons.OK,
-                                         MessageBoxIcon.Exclamation);
-                        }
-                    }
-                }
+                this.DialogResult = DialogResult.No;
             }
             Close();
         }

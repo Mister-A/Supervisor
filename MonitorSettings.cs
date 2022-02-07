@@ -11,17 +11,19 @@ namespace Supervisor
     /// </summary>
     public class MonitorSettings
     {
-        private string localSettingsPath = GetFolderPath(SpecialFolder.CommonApplicationData) + "\\Supervisor\\";
+        private readonly string localSettingsPath = GetFolderPath(SpecialFolder.CommonApplicationData) + "\\Supervisor\\";
 
         public MonitorSettings()
         {
-            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
-            configMap.ExeConfigFilename = localSettingsPath + @"settings.config";
+            ExeConfigurationFileMap configMap = new ExeConfigurationFileMap
+            {
+                ExeConfigFilename = localSettingsPath + @"settings.config"
+            };
             try
             {
-                monitorConfig = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
-                monitorGroup = monitorConfig.GetSection("MonitorGroup") as MonitorGroup;
-                monitors = monitorGroup.Monitors;
+                MonitorConfig = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
+                MonitorGroup = MonitorConfig.GetSection("MonitorGroup") as MonitorGroup;
+                Monitors = MonitorGroup.Monitors;
             }
             catch (Exception ex)
             {
@@ -47,16 +49,16 @@ namespace Supervisor
             }
         }
 
-        public Configuration monitorConfig { get; set; }
-        public MonitorGroup monitorGroup { get; set; }
-        public MonitorGroup.MonitorCollection monitors { get; set; }
+        public Configuration MonitorConfig { get; set; }
+        public MonitorGroup MonitorGroup { get; set; }
+        public MonitorGroup.MonitorCollection Monitors { get; set; }
 
         /// <summary>
         /// Triggers current settings to be written to file
         /// </summary>
         public bool SaveMonitorSettings()
         {
-            monitorConfig.Save(ConfigurationSaveMode.Modified);
+            MonitorConfig.Save(ConfigurationSaveMode.Modified);
             return true;
         }
     }
