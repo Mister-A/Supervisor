@@ -76,18 +76,11 @@ namespace Supervisor
                 set { this["path"] = value; }
             }
 
-            [ConfigurationProperty("alert", IsRequired = true)]
+            [ConfigurationProperty("alert", IsRequired = true, DefaultValue = "0")]
             public string Alert
             {
                 get { return (string)this["alert"]; }
                 set { this["alert"] = value; }
-            }
-
-            [ConfigurationProperty("type", IsRequired = true, DefaultValue = "1")]
-            public string Type
-            {
-                get { return (string)this["type"]; }
-                set { this["type"] = value; }
             }
 
             [ConfigurationProperty("arguments", IsRequired = false, DefaultValue = "")]

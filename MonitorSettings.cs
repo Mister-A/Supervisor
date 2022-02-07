@@ -9,11 +9,11 @@ namespace Supervisor
     /// <summary>
     /// Loads the application settings file from ProgramData path
     /// </summary>
-    internal class MonitorSettings
+    public class MonitorSettings
     {
         private string localSettingsPath = GetFolderPath(SpecialFolder.CommonApplicationData) + "\\Supervisor\\";
 
-        internal MonitorSettings()
+        public MonitorSettings()
         {
             ExeConfigurationFileMap configMap = new ExeConfigurationFileMap();
             configMap.ExeConfigFilename = localSettingsPath + @"settings.config";
