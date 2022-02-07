@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
@@ -20,6 +21,10 @@ namespace Supervisor
             for (int i = 0; i < threads.Count; i++)
             {
                 threads[i].IsCancelled = true;
+            }
+            for (int i = 0; i < threads.Count; i++)
+            {
+                threads[i].Join();
             }
         }
     }
@@ -56,10 +61,13 @@ namespace Supervisor
                 }
                 if (IsCancelled)
                 {
-                    Process.Kill();
-                    Process.WaitForExit();
-                    break;
+                    if (!Process.HasExited)
+                    {
+                        Process.Kill();
+                        break;
+                    }
                 }
+                //wait a bit to reduce resource overhead
                 Thread.Sleep(2000);
             }
         }
@@ -67,6 +75,20 @@ namespace Supervisor
         public void Stop()
         {
             IsCancelled = true;
+        }
+
+        public void Join()
+        {
+            if (Thread.IsAlive)
+                Thread.Join();
+        }
+
+        public bool Join(TimeSpan timeout)
+        {
+            if (Thread.IsAlive)
+                return Thread.Join(timeout);
+            else
+                return true;
         }
     }
 }
