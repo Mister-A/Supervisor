@@ -48,16 +48,32 @@ namespace SupervisorEdit
             if (textEditName.Text == "" || textEditPath.Text == "")
             {
                 lblValidation.Text = "All fields must be completed";
-                MessageBox.Show(this, "You must complete all fields", "Not saved!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                string message = "You must complete all fields.";
+                string caption = "Not saved!";
+
+                using (new CenterWinDialog(this))
+                {
+                    result = MessageBox.Show(message, caption,
+                                 MessageBoxButtons.OK,
+                                 MessageBoxIcon.Exclamation);
+                }
                 return false;
             }
 
             //Path can only be .... a path
             if (textEditPath.Text.IndexOfAny(System.IO.Path.GetInvalidFileNameChars()) == -1)
             {
-                lblValidation.Text = "Path must be a valid local or UNC folder path.";
+                lblValidation.Text = "Path must be a valid local path with executeable.";
                 textEditPath.BackColor = System.Drawing.Color.Tomato;
-                MessageBox.Show(this, "Your application path doesn't look right, please use the \"...\" button to browse for a valid executeable.", "Not saved!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                string message = "Your application path doesn't look right, please use the \"...\" button to browse for a valid executeable.";
+                string caption = "Not saved!";
+
+                using (new CenterWinDialog(this))
+                {
+                    result = MessageBox.Show(message, caption,
+                                 MessageBoxButtons.OK,
+                                 MessageBoxIcon.Exclamation);
+                }
                 return false;
             }
 
@@ -73,7 +89,15 @@ namespace SupervisorEdit
                         if (monitor.Path == textEditPath.Text) { textEditPath.BackColor = System.Drawing.Color.Tomato; }
 
                         lblValidation.Text = "All settings must be unique to this application monitor";
-                        MessageBox.Show(this, "One or more of your settings are already in use by another monitor, all fields must be unique.", "Not saved!", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                        string message = "One or more of your settings are already in use by another monitor, all fields must be unique.";
+                        string caption = "Not saved!";
+
+                        using (new CenterWinDialog(this))
+                        {
+                            result = MessageBox.Show(message, caption,
+                                         MessageBoxButtons.OK,
+                                         MessageBoxIcon.Exclamation);
+                        }
                         return false;
                     }
                 }
