@@ -272,13 +272,14 @@ namespace SupervisorEdit
 
         /// <summary>
         /// Close window (saving will have already been handled by the line editor)
+        /// Offer to restart service
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
         private void btnClose_Click(object sender, EventArgs e)
         {
-            const string message = "Do you want to restart Supervisor Service to apply changes?";
-            const string caption = "Restart service?";
+            string message = "Do you want to restart Supervisor Service to apply changes?";
+            string caption = "Restart service?";
 
             using (new CenterWinDialog(this))
             {
@@ -289,30 +290,63 @@ namespace SupervisorEdit
 
             if (result == DialogResult.Yes)
             {
-                string serviceName = "Apache2.4";
+                bool failed = false;
+                string serviceName = "SupervisorService";
                 ServiceController serviceController = new ServiceController(serviceName);
                 int tickCount1 = Environment.TickCount;
                 int tickCount2 = Environment.TickCount;
                 TimeSpan timeout = TimeSpan.FromMilliseconds(10000);
-                serviceController.Stop();
                 try
                 {
+                    serviceController.Stop();
                     serviceController.WaitForStatus(ServiceControllerStatus.Stopped, timeout);
                 }
+                catch (InvalidOperationException ex)
+                {
+                    message = "The Supervisor Service does not seem to be installed on your computer, please check. " + ex.Message;
+                    caption = "Service not found";
+
+                    using (new CenterWinDialog(this))
+                    {
+                        result = MessageBox.Show(message, caption,
+                                     MessageBoxButtons.OK,
+                                     MessageBoxIcon.Exclamation);
+                    }
+                    failed = true;
+                }
                 catch (Exception ex)
                 {
-                    MessageBox.Show(this, "The Supervisor Service did not stop in time, please check it is installed and restart manually" + ex.Message, "Failed to stop", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
-                    Close();
+                    message = "The Supervisor Service did not stop in time, please check it is installed and restart manually" + ex.Message;
+                    caption = "Failed to stop";
+
+                    using (new CenterWinDialog(this))
+                    {
+                        result = MessageBox.Show(message, caption,
+                                     MessageBoxButtons.OK,
+                                     MessageBoxIcon.Exclamation);
+                    }
+                    failed = true;
                 }
-                timeout = TimeSpan.FromMilliseconds(10000 - (tickCount1 - tickCount2));
-                serviceController.Start();
-                try
+                if (!failed)
                 {
-                    serviceController.WaitForStatus(ServiceControllerStatus.Running, timeout);
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show(this, "The Supervisor Service did not start in time, please check it is installed and restart manually" + ex.Message, "Failed to stop", MessageBoxButtons.OK, MessageBoxIcon.Exclamation);
+                    timeout = TimeSpan.FromMilliseconds(10000 - (tickCount1 - tickCount2));
+                    serviceController.Start();
+                    try
+                    {
+                        serviceController.WaitForStatus(ServiceControllerStatus.Running, timeout);
+                    }
+                    catch (Exception ex)
+                    {
+                        message = "The Supervisor Service did not start in time, please check and manually start as needed. " + ex.Message;
+                        caption = "Failed to start";
+
+                        using (new CenterWinDialog(this))
+                        {
+                            result = MessageBox.Show(message, caption,
+                                         MessageBoxButtons.OK,
+                                         MessageBoxIcon.Exclamation);
+                        }
+                    }
                 }
             }
             Close();
