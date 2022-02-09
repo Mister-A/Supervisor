@@ -31,7 +31,8 @@ namespace Supervisor
             // Initialize Tray Icon
             trayIcon = new NotifyIcon()
             {
-                Icon = Resources.Icon,
+                Text = "Supervisor program monitor",
+                Icon = Resources.supervision,
                 ContextMenu = new ContextMenu(new MenuItem[] {
                 new MenuItem("Settings...", OpenSettings),
                 new MenuItem("Exit", Exit)

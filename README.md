@@ -1,6 +1,16 @@
 # Supervisor GUI
 A fork of Supervisor converting from a commandline app to a Windows Form app, collecting it's monitored process(es) from a config file instead of commandline arguments.
 
+Application icon from <a href="https://www.flaticon.com/free-icons/supervision" title="supervision icons">Supervision icons created by Freepik - Flaticon</a>
+
+## Release with installer
+TBA
+
+
+
+
+.
+## Original command line version:
 # Supervisor
 Simple process supervisor for Windows. Download built app here: [https://github.com/chebum/Supervisor/releases/tag/1.0](https://github.com/chebum/Supervisor/releases/tag/1.0)
 

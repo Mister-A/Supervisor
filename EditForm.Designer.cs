@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(EditForm));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.MonitorsTab = new System.Windows.Forms.TabPage();
             this.listMonitors = new System.Windows.Forms.ListView();
@@ -207,6 +208,7 @@
             this.Controls.Add(this.textEditName);
             this.Controls.Add(this.tabControl1);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "EditForm";
             this.Text = "Edit Supervisor Settings";
             this.Load += new System.EventHandler(this.FrmMonitorList_Load);

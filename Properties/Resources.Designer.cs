@@ -69,5 +69,25 @@ namespace Supervisor.Properties {
                 return ((System.Drawing.Icon)(obj));
             }
         }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon supervision {
+            get {
+                object obj = ResourceManager.GetObject("supervision", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
+        /// </summary>
+        internal static System.Drawing.Icon supervisionbl {
+            get {
+                object obj = ResourceManager.GetObject("supervisionbl", resourceCulture);
+                return ((System.Drawing.Icon)(obj));
+            }
+        }
     }
 }
