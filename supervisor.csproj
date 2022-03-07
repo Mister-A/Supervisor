@@ -122,10 +122,12 @@
     <None Include="Resources\supervisionbl.ico" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Docs\AddAppsUI.png" />
+    <Content Include="Docs\SettingsUI.png" />
     <Content Include="Installer\License.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="Installer\systrayicon.png" />
+    <Content Include="Docs\systrayicon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
