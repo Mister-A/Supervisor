@@ -32,6 +32,23 @@ namespace Supervisor
             //Init default UI state
             Edit(false);
             UpdateList();
+            LoadSettings();
+        }
+
+        /// <summary>
+        /// Load general settings for UI
+        /// </summary>
+        private void LoadSettings()
+        {
+            textCheckInterval.Text = settings.FindSettingFromName("CheckPeriod").Value;
+            checkSendAlerts.Checked = (settings.FindSettingFromName("AlertEnabled").Value == "1") ? true : false;
+            textSMTPServer.Text = settings.FindSettingFromName("SMTPServer").Value;
+            textSMTPPort.Text = settings.FindSettingFromName("SMTPPort").Value;
+            textSMTPUser.Text = settings.FindSettingFromName("SMTPUser").Value;
+            textEmailTo.Text = settings.FindSettingFromName("EmailTo").Value;
+            textSMTPPassword.Text = "**********";
+            //reset the changed flag so populating UI isn't seen as an edit event
+            changed = false;
         }
 
         /// <summary>
@@ -78,7 +95,7 @@ namespace Supervisor
                 return false;
             }
 
-            //Check all fields are unique in pressGroup
+            //Check name and path fields are unique
             foreach (MonitorGroup.ApplicationElement monitor in settings.MonitorGroup.Monitors)
             {
                 if (monitor.Name != originalName)
@@ -116,8 +133,9 @@ namespace Supervisor
             listMonitors.BeginUpdate();
             foreach (MonitorGroup.ApplicationElement monitor in settings.MonitorGroup.Monitors)
             {
+                string alertTick = (monitor.Alert == "1") ? "\u2713" : "";
                 //Row entry for listView on Form
-                string[] listViewRow = { monitor.Name, monitor.Path };
+                string[] listViewRow = { monitor.Name, monitor.Path, alertTick };
                 var listItem = new ListViewItem(listViewRow);
                 listMonitors.Items.Add(listItem);
             }
@@ -139,6 +157,7 @@ namespace Supervisor
                 btnCancel.Enabled = true;
                 btnSave.Enabled = true;
                 btnNew.Enabled = false;
+                checkAlert.Enabled = true;
             }
             else
             {
@@ -151,12 +170,18 @@ namespace Supervisor
                 btnCancel.Enabled = false;
                 btnSave.Enabled = false;
                 btnNew.Enabled = true;
+                checkAlert.Enabled = false;
                 lblValidation.Text = "";
                 textEditName.BackColor = System.Drawing.SystemColors.Window;
                 textEditPath.BackColor = System.Drawing.SystemColors.Window;
             }
         }
 
+        /// <summary>
+        /// Enable editing when an item is selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ListMonitors_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listMonitors.SelectedItems.Count > 0)
@@ -167,6 +192,7 @@ namespace Supervisor
                 //Bring values to edit boxes
                 textEditName.Text = (listMonitors.SelectedItems[0].SubItems[0].Text);
                 textEditPath.Text = (listMonitors.SelectedItems[0].SubItems[1].Text);
+                checkAlert.Checked = (listMonitors.SelectedItems[0].SubItems[2].Text == "\u2713") ? true : false;
                 editIndex = listMonitors.SelectedItems[0].Index;
                 originalName = listMonitors.SelectedItems[0].SubItems[0].Text;
             }
@@ -177,6 +203,24 @@ namespace Supervisor
                 Edit(false);
                 editIndex = default(int);
                 originalName = "";
+            }
+        }
+
+        /// <summary>
+        /// Disable add/edit controls when SettingsTab is selected
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void tabControl1_TabIndexChanged(object sender, EventArgs e)
+        {
+            if (tabControl1.SelectedTab.Name == "SettingsTab")
+            {
+                Edit(false);
+                btnNew.Enabled = false;
+            }
+            else
+            {
+                Edit(false);
             }
         }
 
@@ -222,6 +266,7 @@ namespace Supervisor
             //validate - check no fields empty
             if (FieldsAreValid())
             {
+                string alertString = (checkAlert.Checked) ? "1" : "0";
                 if (originalName != "")
                 {
                     //locate originalID in config structure and update it
@@ -231,6 +276,7 @@ namespace Supervisor
                         {
                             monitor.Name = textEditName.Text;
                             monitor.Path = textEditPath.Text;
+                            monitor.Alert = alertString;
                         }
                     }
                 }
@@ -240,7 +286,8 @@ namespace Supervisor
                     MonitorGroup.ApplicationElement newMonitor = new MonitorGroup.ApplicationElement
                     {
                         Name = textEditName.Text,
-                        Path = textEditPath.Text
+                        Path = textEditPath.Text,
+                        Alert = alertString
                     };
                     settings.Monitors.Add(newMonitor);
                 }
@@ -307,7 +354,45 @@ namespace Supervisor
         /// <param name="e"></param>
         private void BtnClose_Click(object sender, EventArgs e)
         {
+            SaveSettings();
             CheckReload();
+        }
+
+        /// <summary>
+        /// Save the general preferences on close
+        /// </summary>
+        private void SaveSettings()
+        {
+            settings.FindSettingFromName("CheckPeriod").Value = textCheckInterval.Text;
+            settings.FindSettingFromName("AlertEnabled").Value = (checkSendAlerts.Checked) ? "1" : "0";
+            settings.FindSettingFromName("SMTPServer").Value = textSMTPServer.Text;
+            settings.FindSettingFromName("SMTPUser").Value = textSMTPUser.Text;
+            settings.FindSettingFromName("SMTPPort").Value = textSMTPPort.Text;
+            settings.FindSettingFromName("CheckPeriod").Value = textCheckInterval.Text;
+            settings.FindSettingFromName("EmailTo").Value = textEmailTo.Text;
+
+            //Only do PW if changed
+            if (textSMTPPassword.Text != "**********")
+            {
+                settings.FindSettingFromName("SMTPPassword").Value = ObfuscatePW(textSMTPPassword.Text);
+            }
+
+            settings.SaveMonitorSettings();
+        }
+
+        /// <summary>
+        /// Does what it says on the tin NOTE: Not at all secure!
+        /// </summary>
+        /// <param name="pw"></param>
+        /// <returns></returns>
+        private string ObfuscatePW(string pw)
+        {
+            var obscure = "";
+            if (pw != "")
+            {
+                obscure = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(pw));
+            }
+            return obscure;
         }
 
         //Intercept form close to trigger optional reload
@@ -322,12 +407,12 @@ namespace Supervisor
             CheckReload();
         }
 
-        //Ask to reload if settings edited
+        //Ask to reload if settings edited, dialog result will pass back to the calling tray application which will restart monitors if asked to
         private void CheckReload()
         {
             if (changed)
             {
-                string message = "You have changed the monitor settings, do you want to stop and restart the monitor for changes to take effect?";
+                string message = "You have changed the monitor settings, do you want to stop and restart the monitor for changes to take effect?\r\n\r\nWARNING: Your monitored applications will restart if you choose yes.";
                 string caption = "Restart Monitor?";
 
                 using (new CenterWinDialog(this))
@@ -351,6 +436,33 @@ namespace Supervisor
                 this.DialogResult = DialogResult.No;
             }
             Close();
+        }
+
+        /// <summary>
+        /// UI updates if send alerts checkbox is checked
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void checkSendAlerts_CheckedChanged(object sender, EventArgs e)
+        {
+            changed = true;
+            if (checkSendAlerts.Checked)
+            {
+                SMTPSettingsGroup.Enabled = true;
+                textEmailTo.Enabled = true;
+                LabelEmailTo.Enabled = true;
+            }
+            else
+            {
+                SMTPSettingsGroup.Enabled = false;
+                textEmailTo.Enabled = false;
+                LabelEmailTo.Enabled = false;
+            }
+        }
+
+        private void edited(object sender, EventArgs e)
+        {
+            changed = true;
         }
     }
 }

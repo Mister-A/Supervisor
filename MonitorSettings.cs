@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.Diagnostics;
 using System.Windows.Forms;
+using System.Linq;
 using static System.Environment;
 
 namespace Supervisor
@@ -24,6 +25,8 @@ namespace Supervisor
                 MonitorConfig = ConfigurationManager.OpenMappedExeConfiguration(configMap, ConfigurationUserLevel.None);
                 MonitorGroup = MonitorConfig.GetSection("MonitorGroup") as MonitorGroup;
                 Monitors = MonitorGroup.Monitors;
+                SettingsGroup = MonitorConfig.GetSection("SettingsGroup") as SettingsGroup;
+                Settings = SettingsGroup.Settings;
             }
             catch (Exception ex)
             {
@@ -51,6 +54,8 @@ namespace Supervisor
 
         public Configuration MonitorConfig { get; set; }
         public MonitorGroup MonitorGroup { get; set; }
+        public SettingsGroup SettingsGroup { get; set; }
+        public SettingsGroup.SettingsCollection Settings { get; set; }
         public MonitorGroup.MonitorCollection Monitors { get; set; }
 
         /// <summary>
@@ -60,6 +65,27 @@ namespace Supervisor
         {
             MonitorConfig.Save(ConfigurationSaveMode.Modified);
             return true;
+        }
+
+        /// <summary>
+        /// Look up setting from name
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public SettingsGroup.SettingsElement FindSettingFromName(string name)
+        {
+            SettingsGroup.SettingsElement result = null;
+
+            var setting = from SettingsGroup.SettingsElement s in Settings
+                          where s.Name == name
+                          select s;
+
+            if (setting.Any())
+            {
+                result = setting.First();
+            }
+
+            return result;
         }
     }
 }

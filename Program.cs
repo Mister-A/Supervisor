@@ -1,6 +1,7 @@
 ﻿using Supervisor.Properties;
 using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
 using System.Threading;
 using System.Windows.Forms;
@@ -21,8 +22,8 @@ namespace Supervisor
     public class SupervisorSysTray : ApplicationContext
     {
         private NotifyIcon trayIcon;
-        private MonitorSettings settings = new MonitorSettings();
         private List<MonitorThread> threads;
+        private MonitorSettings settings = new MonitorSettings();
 
         public SupervisorSysTray()
         {
@@ -47,11 +48,11 @@ namespace Supervisor
         //Tray icon menu item
         private void Exit(object sender, EventArgs e)
         {
-            // Hide tray icon, otherwise it will remain shown until user mouses over it
-            trayIcon.Visible = false;
-
             //Close anything we're responsible for starting
             Stop();
+
+            // Hide tray icon, otherwise it will remain shown until user mouses over it
+            trayIcon.Visible = false;
 
             Application.Exit();
         }
@@ -64,6 +65,10 @@ namespace Supervisor
             {
                 Stop();
                 Thread.Sleep(1000);
+                //Force reload settings
+                threads.Clear();
+                settings = null;
+                settings = new MonitorSettings();
                 Start();
             }
         }
@@ -95,6 +100,8 @@ namespace Supervisor
     public class MonitorThread
     {
         public readonly MonitorGroup.ApplicationElement Args;
+        private readonly MonitorSettings settings = new MonitorSettings();
+        private Alert alert = new Alert();
 
         public Process Process
         {
@@ -121,6 +128,11 @@ namespace Supervisor
                 if (Process.WaitForExit(1000) && !IsCancelled)
                 {
                     Process = Process.Start(Args.Path, Args.Arguments);
+                    //Raise an alert if set for this monitor
+                    if (Args.Alert == "1")
+                    {
+                        alert.Send(Args.Path);
+                    }
                 }
                 if (IsCancelled)
                 {
@@ -130,8 +142,8 @@ namespace Supervisor
                         break;
                     }
                 }
-                //wait a bit to reduce resource overhead
-                Thread.Sleep(2000);
+                //Check interval
+                Thread.Sleep(int.Parse(settings.FindSettingFromName("CheckPeriod").Value) * 1000);
             }
         }
 
@@ -143,15 +155,21 @@ namespace Supervisor
         public void Join()
         {
             if (Thread.IsAlive)
+            {
                 Thread.Join();
+            }
         }
 
         public bool Join(TimeSpan timeout)
         {
             if (Thread.IsAlive)
+            {
                 return Thread.Join(timeout);
+            }
             else
+            {
                 return true;
+            }
         }
     }
 }

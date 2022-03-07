@@ -3,7 +3,7 @@
 namespace Supervisor
 {
     /// <summary>
-    /// Definition of monitor and app settings
+    /// Definition of monitor settings
     /// </summary>
     public class MonitorGroup : ConfigurationSection
     {
@@ -92,14 +92,14 @@ namespace Supervisor
         }
     }
 
-    public class Settings : ConfigurationSection
+    public class SettingsGroup : ConfigurationSection
     {
         public const string SectionName = "SettingsGroup";
         private const string SettingsCollectionName = "Settings";
 
         [ConfigurationProperty(SettingsCollectionName)]
         [ConfigurationCollection(typeof(SettingsCollection), AddItemName = "add", RemoveItemName = "remove")]
-        public SettingsCollection Presses { get { return (SettingsCollection)base[SettingsCollectionName]; } }
+        public SettingsCollection Settings { get { return (SettingsCollection)base[SettingsCollectionName]; } }
 
         public class SettingsCollection : ConfigurationElementCollection
         {
@@ -156,7 +156,7 @@ namespace Supervisor
                 set { this["name"] = value; }
             }
 
-            [ConfigurationProperty("value", IsRequired = true)]
+            [ConfigurationProperty("value", IsRequired = true, DefaultValue = "587")]
             public string Value
             {
                 get { return (string)this["value"]; }
