@@ -5,7 +5,13 @@ Application icon from <a href="https://www.flaticon.com/free-icons/supervision" 
 
 When run this version of Supervisor runs as a System Tray icon, you'll find it by the clock, right click to access the settings:
 
-![Systray Icon Image](https://github.com/Mister-A/Supervisor/blob/Dev-to-service/Installer/systrayicon.png?raw=true)
+![Systray Icon Image](https://github.com/Mister-A/Supervisor/blob/master/Docs/systrayicon.png?raw=true)
+
+Add your chosen applications via the UI:
+![Configure Monitors](https://github.com/Mister-A/Supervisor/blob/master/Docs/AddAppsUI.png?raw=true)
+
+Configure monitor interval and optional email alerts:
+![Configure Monitors](https://github.com/Mister-A/Supervisor/blob/master/Docs/SettingsUI.png?raw=true)
 
 ## Release with installer
 TBC
