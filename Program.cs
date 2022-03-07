@@ -1,142 +1,175 @@
-﻿using System;
+﻿using Supervisor.Properties;
+using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
+using System.Windows.Forms;
 
-namespace Supervisor {
-    public class Program {
-        static void Main(string[] args) {
-            var programArgs = ParseArgs(args);
-            if (programArgs.Count == 0) {
-                Console.WriteLine("Please specify applications to start and watch. For example:");
-                Console.WriteLine("Start and monitor one app:");
-                Console.WriteLine("supervisor myapp.exe");
-                Console.WriteLine("Start and monitor two apps:"); 
-                Console.WriteLine("supervisor app1.exe app2.exe");
-                Console.WriteLine("Start and monitor two apps with arguments:");
-                Console.WriteLine("supervisor \"app1.exe \"\"argument 1\"\"\" \"\"\"Folder Name\\app1.exe\"\" \"\"argument 1\"\"\"");
-                return;
+namespace Supervisor
+{
+    public class Program
+    {
+        [STAThread]
+        private static void Main(string[] args)
+        {
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            Application.Run(new SupervisorSysTray());
+        }
+    }
+
+    public class SupervisorSysTray : ApplicationContext
+    {
+        private NotifyIcon trayIcon;
+        private List<MonitorThread> threads;
+        private MonitorSettings settings = new MonitorSettings();
+
+        public SupervisorSysTray()
+        {
+            threads = new List<MonitorThread>(settings.MonitorGroup.Monitors.Count);
+
+            // Initialize Tray Icon
+            trayIcon = new NotifyIcon()
+            {
+                Text = "Supervisor program monitor",
+                Icon = Resources.supervision,
+                ContextMenu = new ContextMenu(new MenuItem[] {
+                new MenuItem("Settings...", OpenSettings),
+                new MenuItem("Exit", Exit)
+            }),
+                Visible = true
+            };
+
+            //Do our job
+            Start();
+        }
+
+        //Tray icon menu item
+        private void Exit(object sender, EventArgs e)
+        {
+            //Close anything we're responsible for starting
+            Stop();
+
+            // Hide tray icon, otherwise it will remain shown until user mouses over it
+            trayIcon.Visible = false;
+
+            Application.Exit();
+        }
+
+        //Tray icon menu item
+        private void OpenSettings(object sender, EventArgs e)
+        {
+            Form settingsForm = new EditForm();
+            if (settingsForm.ShowDialog() == DialogResult.OK)
+            {
+                Stop();
+                Thread.Sleep(1000);
+                //Force reload settings
+                threads.Clear();
+                settings = null;
+                settings = new MonitorSettings();
+                Start();
             }
+        }
 
-            var threads = new List<MonitorThread>(programArgs.Count);
-
-            for (int i = 0; i < programArgs.Count; i++) {
-                var t = new MonitorThread(programArgs[i]);
+        //Start all defined monitors
+        private void Start()
+        {
+            foreach (MonitorGroup.ApplicationElement appMonitor in settings.MonitorGroup.Monitors)
+            {
+                var t = new MonitorThread(appMonitor);
                 threads.Add(t);
             }
+        }
 
-            Console.WriteLine("Press enter to stop all processes.");
-            Console.ReadLine();
-            for (int i = 0; i < threads.Count; i++) {
+        //Signal monitors to stop and block until they've closed
+        private void Stop()
+        {
+            for (int i = 0; i < threads.Count; i++)
+            {
                 threads[i].Stop();
             }
-            for (int i = 0; i < threads.Count; i++) {
+            for (int i = 0; i < threads.Count; i++)
+            {
                 threads[i].Join();
             }
         }
-
-        public static List<ProgramArgs> ParseArgs(string[] args) {
-            var res = new List<ProgramArgs>(args.Length);
-            for (int i = 0; i < args.Length; i++) {
-                var arg = args[i];
-                if (arg[0] == '\"') {
-                    var quoteIndex = arg.IndexOf('\"', 1);
-                    res.Add(new ProgramArgs {
-                        ExeName = arg.Substring(1, quoteIndex - 1),
-                        Arguments = arg.Substring(quoteIndex + 1).Trim()
-                    });
-                } else {
-                    var spaceIndex = arg.IndexOf(' ');
-                    if (spaceIndex < 0) {
-                        res.Add(new ProgramArgs {
-                            ExeName = arg,
-                            Arguments = ""
-                        });
-                    } else {
-                        res.Add(new ProgramArgs {
-                            ExeName = arg.Substring(0, spaceIndex),
-                            Arguments = arg.Substring(spaceIndex + 1).Trim()
-                        });
-                    }
-                }
-            }
-            return res;
-        }
-
     }
 
-    public class MonitorThread {
-        public readonly ProgramArgs Args;
-        
-        public Process Process {
+    public class MonitorThread
+    {
+        public readonly MonitorGroup.ApplicationElement Args;
+        private readonly MonitorSettings settings = new MonitorSettings();
+        private Alert alert = new Alert();
+
+        public Process Process
+        {
             get;
             private set;
         }
 
-        private bool IsCancelled;
+        public bool IsCancelled;
 
         private readonly Thread Thread;
 
-        public MonitorThread(ProgramArgs args) {
-            Args = args;
+        public MonitorThread(MonitorGroup.ApplicationElement monitor)
+        {
+            Args = monitor;
             Thread = new Thread(DoMonitor);
             Thread.Start();
         }
 
-        private void DoMonitor() {
-            Process = Process.Start(Args.ExeName, Args.Arguments);
-            while (true) {
-                if (Process.WaitForExit(1000) && !IsCancelled) {
-                    Process = Process.Start(Args.ExeName, Args.Arguments);
+        private void DoMonitor()
+        {
+            Process = Process.Start(Args.Path, Args.Arguments);
+            while (true)
+            {
+                if (Process.WaitForExit(1000) && !IsCancelled)
+                {
+                    Process = Process.Start(Args.Path, Args.Arguments);
+                    //Raise an alert if set for this monitor
+                    if (Args.Alert == "1")
+                    {
+                        alert.Send(Args.Path);
+                    }
                 }
-                if (IsCancelled) {
+                if (IsCancelled)
+                {
                     if (!Process.HasExited)
+                    {
                         Process.Kill();
-                    return;
+                        break;
+                    }
                 }
+                //Check interval
+                Thread.Sleep(int.Parse(settings.FindSettingFromName("CheckPeriod").Value) * 1000);
             }
         }
 
-        public void Stop() {
+        public void Stop()
+        {
             IsCancelled = true;
         }
 
-        public void Join() {
+        public void Join()
+        {
             if (Thread.IsAlive)
+            {
                 Thread.Join();
+            }
         }
 
-        public bool Join(TimeSpan timeout) {
+        public bool Join(TimeSpan timeout)
+        {
             if (Thread.IsAlive)
+            {
                 return Thread.Join(timeout);
+            }
             else
+            {
                 return true;
-        }
-    }
-
-    public class ProgramArgs {
-        public string ExeName;
-        public string Arguments;
-
-        public override bool Equals(object obj) {
-            if (obj is ProgramArgs) {
-                var b = obj as ProgramArgs;
-                return ExeName == b.ExeName && Arguments == b.Arguments;
-            } else
-                return false;
-        }
-
-        public override string ToString() {
-            return "\"" + ExeName + "\" " + Arguments;
-        }
-
-        public override int GetHashCode() {
-            var result = ExeName.GetHashCode();
-            result = 31 * result + Arguments.GetHashCode();
-            return result;
+            }
         }
     }
 }
