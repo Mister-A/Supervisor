@@ -14,7 +14,7 @@ Configure monitor interval and optional email alerts:
 ![Configure Monitors](https://github.com/Mister-A/Supervisor/blob/master/Docs/SettingsUI.png?raw=true)
 
 ## Release with installer
-TBC
+https://github.com/Mister-A/Supervisor/releases/tag/1.0GUI
 
 
 
