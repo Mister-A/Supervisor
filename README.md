@@ -14,7 +14,7 @@ Configure monitor interval and optional email alerts:
 ![Configure Monitors](/Docs/SettingsUI.png?raw=true)
 
 ## Release with installer
-https://github.com/Mister-A/Supervisor/releases/tag/1.0GUI
+https://github.com/Mister-A/Supervisor/releases/tag/1.01GUI
 
 Application icon from <a href="https://www.flaticon.com/free-icons/supervision" title="supervision icons">Supervision icons created by Freepik - Flaticon</a>
 
