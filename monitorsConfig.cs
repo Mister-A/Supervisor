@@ -156,7 +156,7 @@ namespace Supervisor
                 set { this["name"] = value; }
             }
 
-            [ConfigurationProperty("value", IsRequired = true, DefaultValue = "587")]
+            [ConfigurationProperty("value", IsRequired = true, DefaultValue = "")]
             public string Value
             {
                 get { return (string)this["value"]; }

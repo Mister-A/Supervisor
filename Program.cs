@@ -60,6 +60,8 @@ namespace Supervisor
         private void OpenSettings(object sender, EventArgs e)
         {
             Form settingsForm = new EditForm();
+            //Pause to ensure form created, keep getting null exception on the following on some systems but not others - issue #5
+            Thread.Sleep(200);
             if (settingsForm.ShowDialog() == DialogResult.OK)
             {
                 Stop();
