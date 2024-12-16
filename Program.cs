@@ -40,6 +40,14 @@ namespace Supervisor
                 Visible = true
             };
 
+            // Display settings if no monitors configured or if first run
+            if (settings.FindSettingFromName("FirstRun").Value == "1" || settings.MonitorGroup.Monitors.Count == 0)
+            {
+                OpenSettings(new object(), new EventArgs());
+                settings.FindSettingFromName("FirstRun").Value = "0";
+                settings.SaveMonitorSettings();
+            }
+
             //Do our job
             Start();
         }
