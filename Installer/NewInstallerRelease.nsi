@@ -68,8 +68,10 @@ Section "Supervisor (required)" SecMain
   File "..\settings.config"
 
 
-  ;allow all read write settings folder
-  AccessControl::GrantOnFile "$LOCALAPPDATA\Supervisor\" "(BU)" "GenericRead + GenericWrite"
+  ;allow all read write settings folder and settings file
+  AccessControl::GrantOnFile "$LOCALAPPDATA\Supervisor\" "(BU)" "FullAccess"
+  AccessControl::GrantOnFile "$LOCALAPPDATA\Supervisor\settings.config" "(BU)" "FullAccess"
+  AccessControl::GrantOnFile "$LOCALAPPDATA\Supervisor\settings.config" "(S-1-5-32-545)" "FullAccess"
     
   ; Write the installation path into the registry
   WriteRegStr HKLM "SOFTWARE\Supervisor" "Install_Dir" "$INSTDIR"
@@ -87,8 +89,8 @@ Section "Start Menu Shortcuts" SecShort
 
   SectionIn 1
   CreateDirectory "$SMPROGRAMS\Supervisor"
-  CreateShortCut "$SMPROGRAMS\PressProfiler Bridge\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
-  CreateShortCut "$SMPROGRAMS\PressProfiler Bridge\Supervisor.lnk" "$INSTDIR\Supervisor.exe" "" "$INSTDIR\Supervisor.exe" 0
+  CreateShortCut "$SMPROGRAMS\Supervisor\Uninstall.lnk" "$INSTDIR\uninstall.exe" "" "$INSTDIR\uninstall.exe" 0
+  CreateShortCut "$SMPROGRAMS\Supervisor\Supervisor.lnk" "$INSTDIR\Supervisor.exe" "" "$INSTDIR\Supervisor.exe" 0
   
 SectionEnd
 
